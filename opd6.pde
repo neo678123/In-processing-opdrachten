@@ -52,7 +52,7 @@ class Planet extends Circle
     
     starPos = star.pos;
     
-    velocity = acceleration = new Vec2(0,8);
+    velocity = acceleration = new Vec2(0,0);
   }
   
   public void updatePos(float dt)
@@ -74,16 +74,21 @@ long prev;
 double dt = 0;
 
 Circle star;
-Planet planet;
+Planet planet[];
 
 void setup()
 {
   size(800,800);
-  frameRate(600);
+  frameRate(6000);
   t = 0;
+  planet = new Planet[10];
   
   star = new Circle(new Vec2(400,400), 100);
-  planet = new Planet(new Vec2(200,400), star, 50);
+  planet[0] = new Planet(new Vec2(200,400), star, 50);
+  planet[1] = new Planet(new Vec2(100,400), star, 50);
+  
+  planet[0].velocity.y = 8;
+  planet[1].velocity.y = -8;
 }
 
 void update()
@@ -93,16 +98,19 @@ void update()
   //dt = (-prev + (prev = frameRateLastNanos))/1e9d;
   println(dt);
   
-  planet.updatePos((float)dt);
+  planet[0].updatePos((float)dt);
+  planet[1].updatePos((float)dt);
 }
 
 void draw()
 {
   clear();
+  background(200);
   pushMatrix();
 
   star.draw(0,255,255);
-  planet.draw(0,255,0);
+  planet[0].draw(255,0,0);
+  planet[1].draw(0,255,0);
   update();
 
   popMatrix();
