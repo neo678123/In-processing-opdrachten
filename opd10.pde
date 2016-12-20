@@ -81,9 +81,9 @@ void setup()
 {
   size(1280,720, P3D);
   frameRate(600);
-  noStroke();
   
-  planet = new Planet[10];
+  
+  planet = new Planet[5];
   
   star = new Sphere(new Vec3(width/2,height/2,-150), 100);
   
@@ -95,26 +95,34 @@ void setup()
   
   planet[2] = new Planet(new Vec3(700,400,-300), star, 50);
   planet[2].velocity = new Vec3(20000, 12000, 0);
+  
+  planet[3] = new Planet(new Vec3(600,400,-300), star, 50);
+  planet[3].velocity = new Vec3(12000, 20000, 0);
+  
+  planet[4] = new Planet(new Vec3(600,300,-300), star, 50);
+  planet[4].velocity = new Vec3(-20000, -12000, 0);
 }
 
 void draw()
 {
   clear();
-  background(200);
+  background(0, 0, 100);
   println(frameRate);
   pushMatrix();
   
-  planet[0].updatePos();
-  planet[1].updatePos();
-  planet[2].updatePos();
-  
-  star.draw(0,0,0);
+  for(Planet p : planet)
+    p.updatePos();
   
   lights();
-  planet[0].draw(255,0,0);
-  planet[1].draw(0,255,0);
-  planet[2].draw(0,0,255);
+  stroke(50,50,50);
+  star.draw(255,floor(sin(t*250)*60),0);
+  star.r += sin(t*500)*0.1;
   
+  for(int i = 0; i < planet.length; i++)
+  {
+    int k = floor(map(i, 0, planet.length, 0, 255));
+    planet[i].draw(k,k,k);
+  }
   popMatrix();
   t+=dt;
 }
