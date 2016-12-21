@@ -17,6 +17,12 @@ class Vec2
     Vec2 u = new Vec2(x-v.x, y-v.y);
     return u.mag();
   }
+  
+  public Vec2 normalized()
+  {
+    float m = mag();
+    return new Vec2(x / m, y / m);
+  }
 }
 
 float t;
@@ -39,7 +45,7 @@ void update()
 
 Vec2 f(Vec2 v)
 {
-  return new Vec2(10/cos(v.x/200), 10/sin(v.y/100)); 
+  return new Vec2(10f/cos(v.x/200), 10f/sin(v.y/100)); 
 }
 
 void draw()
@@ -60,7 +66,8 @@ void draw()
       for(float y = -height/2; y <= height; y+=10)
       {
         Vec2 w = f(new Vec2(x,y));
-        line(x, y, x+w.x, y+w.y);
+        line(x, y, x+5*w.normalized().x, y+5*w.normalized().y);
+        //line(x, y, x+w.x, y+w.y);
       }
   }
   
