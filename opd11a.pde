@@ -61,18 +61,22 @@ float t;
 long prev;
 double dt = 0;
 
+byte hv = 0; // horiz 0, vertic 1
+Vec2 c2Velo;
+
 Circle c1, c2;
 Vec2 ds;
 
 void setup()
 {
   size(800,800);
-  frameRate(6000);
+  frameRate(60);
   t = 0;
   noFill();
   
-  c1 = new Circle(new Vec2(100,100), 90);
-  c2 = new Circle(new Vec2(200,160), 120);
+  c1 = new Circle(new Vec2(400,500), 90);
+  c2 = new Circle(new Vec2(300,460), 120);
+  c2Velo = new Vec2(0,0);
   
   ds = c2.intersectionDepth(c1);
 }
@@ -80,14 +84,16 @@ void setup()
 void update()
 {
   t+=dt;
-  dt = 0.0666;
+  dt = (-prev + (prev = frameRateLastNanos))/1e9d;
+  
+  c2.pos.x += c2Velo.x * dt;
+  c2.pos.y += c2Velo.y * dt;
+  
   ds = c2.intersectionDepth(c1);
-  if(ds.x > 0.01f)
-  {
-    float L = ds.mag();
-    c2.pos.x += ds.x/L * dt;
-    c2.pos.y += ds.y/L * dt;
-  }
+  c2.pos.x += ds.x;
+  c2.pos.y += ds.y;
+  
+  println(1/dt);
 }
 
 void draw()
@@ -100,8 +106,40 @@ void draw()
   
   c1.draw(0,255,255);
   c2.draw(255,255,0);
-  
+
   line(c1.pos.x, c1.pos.y, c1.pos.x+ds.x, c1.pos.y+ds.y);
 
   popMatrix();
+}
+
+void keyPressed() 
+{
+  if(key == 's'){
+    c2Velo.y = 200f;
+  }
+  if(key == 'w'){
+    c2Velo.y = -200f;
+  }
+  if(key == 'd'){
+    c2Velo.x = 200;
+  }
+  if(key == 'a'){
+    c2Velo.x = -200f;
+  }
+}
+
+void keyReleased()
+{
+  if(key == 's'){
+    c2Velo.y = 0;
+  }
+  if(key == 'w'){
+    c2Velo.y = 0;
+  }
+  if(key == 'd'){
+    c2Velo.x = 0;
+  }
+  if(key == 'a'){
+    c2Velo.x = 0;
+  }
 }
