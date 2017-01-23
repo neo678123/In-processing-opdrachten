@@ -59,7 +59,7 @@ class Rectangle
    
    public Vec2 leftTop() { return centre.add(new Vec2(-0.5f * w, -0.5f * h)); }
    
-   public void draw(byte r, byte g, byte b)
+   public void draw(int r, int g, int b)
    {
      Vec2[] vertices = getVertices();  
      fill(r, g, b);
@@ -82,12 +82,12 @@ class Circle
     this.r = r;
   }
   
-  public void draw(byte r, byte g, byte b)
+  public void draw(int r, int g, int b)
   {
      fill(r,g,b);
      
      ellipseMode(CENTER);
-     ellipse(pos.x, pos.y, 2*r, 2*r);
+     ellipse(pos.x, pos.y, 2*this.r, 2*this.r);
   }
 }
 
@@ -105,7 +105,45 @@ class Ball extends Circle
   public void update(float dt)
   {
     if(shouldReflect)
+    {
       this.velo = this.velo.reflect(new Vec2(-1,0).mul((pos.x - width/2) / (abs(pos.x - width/2))));
+      shouldReflect = false;
+    }
+    if(pos.y + r >= height && velo.y > 0)
+      this.velo = this.velo.reflect(new Vec2(0, -1));
+    if(pos.y - r <= 0 && velo.y < 0)
+      this.velo = this.velo.reflect(new Vec2(0, 1));
+      
     this.pos = this.pos.add(velo.mul(dt));
   }
+  
+  public void checkReflect(Rectangle R)
+  {
+    Vec2[] vertices = R.getVertices();
+    
+    if(pos.y - r <= vertices[3].y && pos.y + r >= vertices[0].y)
+    {
+       if(pos.x + r >= vertices[0].x && pos.x - r <= vertices[3].x)
+       {
+          shouldReflect = true;
+          pos.x = vertices[0].x - r;
+       }
+    }
+  }
+}
+
+Ball b;
+
+void setup()
+{
+  size(1280, 720);
+  b = new Ball(new Vec2(0,height/2), 20, new Vec2(100,200)); 
+}
+
+void draw()
+{
+  clear();
+  
+  b.update(1f/60f);
+  b.draw(0xFF,0x00,0x00);
 }
