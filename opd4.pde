@@ -1,108 +1,154 @@
-class Vec2
+public class Vec2
 {
   public float x, y;
-  
+ 
   public Vec2(float x, float y)
   {
     this.x = x;
     this.y = y;
   }
+ 
+  public float sqrmag() { return x*x+y*y;}
+  public float mag() { return sqrt(sqrmag()); }
+ 
+  public Vec2  add(Vec2 v) { return new Vec2(x+v.x, y+v.y); }
+  public Vec2  sub(Vec2 v) { return new Vec2(x-v.x, y-v.y); }
+  public Vec2  mul(float s){ return new Vec2(x*s, y*s); }
+  public Vec2  div(float s){ return new Vec2(x/s, y/s); }
   
-  public float mag()
+  public float dot(Vec2 v) { return x*v.x+y*v.y; }
+  public float distance(Vec2 v)
   {
-    return sqrt(x*x+y*y); 
+    Vec2 u = new Vec2(x-v.x, y-v.y);
+    return u.mag();
   }
   
-  public float sqrmag()
+  public Vec2 normalized()
   {
-    return x*x+y*y; 
+    float m = mag();
+    return new Vec2(x / m, y / m);
   }
   
-  public float dot(Vec2 v)
+  public Vec2 reflect(Vec2 normal)
   {
-    return x*v.x+y*v.y; 
+    return this.sub(normal.mul(2 * this.dot(normal)));
+  }
+  
+  public Vec2 transform(float m11, float m12, float m21, float m22)
+  {
+     return new Vec2(m11*x + m12*y, m21*x + m22*y); 
   }
 }
 
-int lim;
-int j; //j is welke plek
-int swaps;
-int comparisons;
+class Circle
+{
+  Vec2 pos;
+  float r;
+  
+  public Circle(Vec2 pos, float r)
+  {
+    this.pos = pos;
+    this.r = r;
+  }
+  
+  public void draw(int red, int green, int blue)
+  {
+     fill(red,green,blue);
+     ellipse(pos.x, pos.y, r, r);
+  }
+}
 
-int[] staven = {209, 451, 41, 331, 383, 257, 141, 89, 434, 165, 94, 32, 345, 315, 484, 25, 296, 311, 429, 160, 392, 58, 287, 199, 188, 464, 444, 452, 13, 489, 3, 70, 385, 225, 286, 172, 326, 197, 266, 218, 110, 242, 221, 396, 184, 126, 99, 281, 69, 276, 159, 401, 36, 96, 293, 313, 167, 327, 376, 472, 124, 284, 7, 347, 294, 337, 427, 196, 65, 495, 378, 267, 256, 27, 62, 443, 320, 475, 459, 121, 135, 83, 458, 161, 493, 418, 457, 388, 333, 357, 118, 483, 149, 71, 302, 122, 403, 85, 132, 30, 68, 424, 28, 24, 150, 86, 343, 314, 100, 191, 20, 237, 156, 348, 192, 332, 423, 361, 155, 428, 468, 289, 440, 127, 116, 203, 339, 240};
+//Het moment waar ik pointers mis q_q
+class Planet extends Circle
+{
+  final float k = 20000f;
+  float thisR, starR[];
+  Vec2 starPos[], velocity, acceleration;
+  
+  public Planet(Vec2 pos, float r, Circle... star)
+  {
+    super(pos,r);
+    thisR = r;
+    
+    starPos = new Vec2 [star.length];
+    starR   = new float[star.length];
+    
+    int j = 0;
+    for(Circle c : star) 
+    {
+      starR[j] = c.r;
+      starPos[j] = c.pos;
+      j++;
+    }
+    velocity = acceleration = new Vec2(0,0);
+  }
+  
+  public void updatePos(float dt)
+  {
+     acceleration = new Vec2(0,0);
+    
+     for(Vec2 sp : starPos)
+     {
+       float C = k / cube(pos.distance(sp));
+       Vec2 r = new Vec2(sp.x - pos.x, sp.y - pos.y);
+       dt *= 2;
+       acceleration = acceleration.add(new Vec2(C * r.x, C * r.y));
+     }
+     
+     velocity = new Vec2(velocity.x + acceleration.x * dt, velocity.y + acceleration.y * dt);
+     pos = new Vec2(pos.x + velocity.x * dt, pos.y + velocity.y * dt);
+  }
+  
+  private float cube(float x) { return x*x*x; }
+}
 
-int max, count;
-long lastTime;
+float t;
+long prev;
+double dt = 0;
+
+Circle star[];
+Planet planet[];
 
 void setup()
 {
-  size(1280,720);
-  max = max(staven);
-  count = staven.length;
-  lastTime = millis();
-  lim = count - 1;
-  swaps = 0;
-  comparisons = 0;
+  size(800,800);
+  frameRate(6000);
+  t = 0;
+  planet = new Planet[10];
+  star = new Circle[2];
+  
+  star[0] = new Circle(new Vec2(200,400), 100);
+  star[1] = new Circle(new Vec2(600,400), 100);
+  
+  planet[0] = new Planet(new Vec2(200,600), 50, star);
+  planet[1] = new Planet(new Vec2(100,600), 50, star);
+  
+  planet[0].velocity.x = 8;
+  planet[1].velocity.x = -8;
+}
+
+void update()
+{
+  t+=dt;
+  dt = 0.00666;
+  //dt = (-prev + (prev = frameRateLastNanos))/1e9d;
+  println(dt);
+  
+  planet[0].updatePos((float)dt);
+  planet[1].updatePos((float)dt);
 }
 
 void draw()
 {
-  if (!sorted(staven)){
-  staven = bubbleSortIteration(staven);
   clear();
+  background(200);
   pushMatrix();
-  
-  //Transformeer naar wiskundig assenstelsel
-  translate(0, 720);
-  scale(1,-1);
-  
-  for(int k = 0; k < count; k++)
-  {
-    if (k == j){
-      fill(255, 0, 0);
-      rect(1280.0f/count * k, 0, 1280.0f/count, staven[k] * 720.0f/max);
-    }else{
-      fill(255, 255, 255);
-      rect(1280.0f/count * k, 0, 1280.0f/count, staven[k] * 720.0f/max);
-    }
-  }
-  
-  fill(255, 255, 255);
+
+  star[0].draw(0,255,255);
+  star[1].draw(0,255,255);
+  planet[0].draw(255,0,0);
+  planet[1].draw(0,255,0);
+  update();
+
   popMatrix();
-  
-  pushMatrix();
-  
-  translate(0, 0);
-  scale(1, 1);
-  text("Swaps: " + swaps, 10, 20);
-  text("Comparisons: " + comparisons, 10, 30);
-  
-  popMatrix();
-  }
-}
-
-
-public int[] bubbleSortIteration(int[] l){
-  while (j <= lim){
-    if (j == lim){
-      j = 0;
-      --lim;
-    }
-    
-    if (l[j] > l[j + 1]){
-       int p = l[j];
-       l[j] = l[j + 1];
-       l[j + 1] = p;
-       swaps++;
-       return l;
-    }
-    comparisons ++;
-    j++;
-  }
-  return l;
-}
-
-boolean sorted(int[] l){
-  for (int q = 0; q < l.length - 1; q++) if (l[q] > l[q+1]) return false; 
-  return true;
 }
